@@ -1,0 +1,41 @@
+import csv
+import nltk
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.naive_bayes import MultinomialNB
+
+stopwords = nltk.corpus.stopwords.words('russian')
+
+file = r'news_train.txt'
+test_file = r'news_test.txt'
+news = []
+category = []
+data = list(csv.reader(open(file, 'rt', encoding="utf8"), delimiter='\t'))
+
+for val in data:
+    news.append(val[2])
+for val in data:
+    category.append(val[0])
+
+MAX = 10000
+vect = TfidfVectorizer(stop_words=stopwords, max_features=MAX, smooth_idf=True)
+train = vect.fit_transform(news)
+
+cls = MultinomialNB()
+cls.fit(train, category)
+
+test_data = list(csv.reader(open(test_file, 'rt', encoding="utf8"), delimiter='\t'))
+test_news = []
+
+for val in test_data:
+    test_news.append(val[1])
+i = 0
+newfile = open('result.txt', 'w')
+for val in test_news:
+    i += 1
+    print(i)
+    ss = vect.transform([val])
+    ss = ss.toarray()
+    ans = cls.predict(ss)
+    res = str(ans)
+    newfile.writelines("%s\n" % res[2:len(res) - 2])
+newfile.close()
